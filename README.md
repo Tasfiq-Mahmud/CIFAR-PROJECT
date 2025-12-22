@@ -1,6 +1,6 @@
 # CIFAR-10 Image Classification — Learning-Focused Deep Learning Project
 
-## 📌 Overview
+## Overview
 This project explores **image classification on the CIFAR-10 dataset using PyTorch**, with an emphasis on **understanding training dynamics rather than chasing benchmark scores**.
 
 The goal was to build strong fundamentals in:
@@ -13,7 +13,7 @@ Every technique used here was **tested, questioned, and validated experimentally
 
 ---
 
-## 🧠 What I Learned Through This Project
+## What I Learned Through This Project
 
 - How regularization techniques (Dropout, Weight Decay) affect generalization
 - Why some popular augmentations **hurt performance on small images**
@@ -24,7 +24,7 @@ Every technique used here was **tested, questioned, and validated experimentally
 
 ---
 
-## 🏗️ Model Architecture
+## Model Architecture
 
 - Backbone: **ResNet-18**
 - Modifications:
@@ -45,7 +45,7 @@ ResNet-18
  └── Linear(512 → 10)
 ```
 
-## 🔍 Observations on Data Augmentation
+## Observations on Data Augmentation
 
 During experimentation, **RandomCrop with padding consistently outperformed RandomResizedCrop** on the CIFAR-10 dataset. In addition to achieving better validation accuracy, RandomResizedCrop also **significantly slowed down training iterations**.
 
@@ -78,7 +78,7 @@ Simple spatial augmentations such as **RandomCrop with padding** provide effecti
 
 These results highlight the importance of **choosing augmentations based on dataset characteristics rather than default best practices**.
 
-## 🔬 Dropout Ensemble Experiment (Negative Result)
+## Dropout Ensemble Experiment (Negative Result)
 
 An additional experiment was conducted using an **ensemble-style inference approach with Dropout (p = 0.2)** enabled during evaluation.
 
