@@ -83,8 +83,8 @@ These results highlight the importance of **choosing augmentations based on data
 An additional experiment was conducted using an **ensemble-style inference approach with Dropout (p = 0.2)** enabled during evaluation.
 
 Contrary to expectations, this approach resulted in:
-- **Lower validation accuracy**
-- **Higher instability in loss behavior**
+- **Slightly Lower validation accuracy**
+- **But Drastic Lower Test Accuracy. (87%->83%)**
 
 indicating that the ensemble dropout setup did **not** improve generalization for this configuration.
 
@@ -95,6 +95,31 @@ Observations
 
 Below is a visualization of the performance trends observed during this experiment:
 
-<img width="1500" height="500" alt="Ensemble Dropout Experiment Results" src="https://github.com/user-attachments/assets/7be33a7f-914f-407b-b991-81506ad21879" />
+<img width="1233" height="468" alt="image" src="https://github.com/user-attachments/assets/9ce8fbc6-86a9-45d8-8ebf-935d88d021c0" />
+
 
 This experiment reinforces the importance of **empirical validation over theoretical assumptions**.
+
+
+## ColorJitter Experiment
+
+Color-based augmentation using **ColorJitter** was evaluated to test whether photometric variations would improve model generalization.
+
+### Observations
+- Applying ColorJitter resulted in **little to no improvement in validation accuracy**
+- In some runs, training became slower without measurable gains
+- Aggressive jitter settings occasionally degraded performance
+
+### Interpretation
+CIFAR-10 images are:
+- low resolution (32×32)
+- already noisy
+- not strongly color-dependent for many classes
+
+As a result, introducing heavy color perturbations did **not add meaningful invariance** and sometimes introduced unnecessary noise.
+
+### Takeaway
+Color-based augmentations are **not universally beneficial**.  
+For CIFAR-10, **mild or no ColorJitter** performed better than aggressive color transformations.
+
+This further emphasizes the need to **match augmentation strategies to dataset characteristics**, rather than applying them blindly.
