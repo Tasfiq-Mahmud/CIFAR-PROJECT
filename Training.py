@@ -95,3 +95,40 @@ class ModelTrainer:
             plt.savefig(save)
         else:
             plt.show()
+
+
+
+def show_missclassification (model,val_data,le):
+    model.eval()
+    misclassified_images = []
+    misclassified_labels = []
+    true_labels = []
+
+    for img, label in val_data:
+        with torch.no_grad():
+            ensemble_outputs = torch.zeros((img.size(0), 1, 10))
+            for i in range(1):
+                outputs = model(img)
+                ensemble_outputs[:, i, :] = outputs
+            avg_outputs = ensemble_outputs.mean(dim=1).to(label.device)
+            predictions = torch.argmax(avg_outputs, axis=1)
+
+            for i in range(len(label)):
+                if predictions[i] != label[i]:
+                    misclassified_images.append(img[i])
+                    misclassified_labels.append(predictions[i].item())
+                    true_labels.append(label[i].item())
+
+    num_images = len(misclassified_images)
+    if num_images == 0:
+        print("No misclassifications found.")
+        return
+
+    plt.figure(figsize=(12, 12))
+    for i in range(min(num_images, 25)):
+        plt.subplot(5, 5, i + 1)
+        plt.imshow(misclassified_images[i].permute(1, 2, 0).cpu())
+        plt.title(f'True: {le.inverse_transform([true_labels[i]])[0]}, Pred: {le.inverse_transform([misclassified_labels[i]])[0]}')
+        plt.axis('off')
+    plt.tight_layout()
+    plt.show()
