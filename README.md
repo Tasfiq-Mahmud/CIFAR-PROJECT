@@ -123,3 +123,33 @@ Color-based augmentations are **not universally beneficial**.
 For CIFAR-10, **mild or no ColorJitter** performed better than aggressive color transformations.
 
 This further emphasizes the need to **match augmentation strategies to dataset characteristics**, rather than applying them blindly.
+
+
+### EfficientNet-B0 vs ResNet: Validation–Test Discrepancy Analysis
+
+After establishing a baseline using a ResNet architecture, the model backbone was replaced with EfficientNet-B0 to evaluate its impact on classification performance on CIFAR-10.
+
+Validation Performance
+
+The EfficientNet-B0 model achieved a validation accuracy of approximately 96%, which was significantly higher than the training accuracy. While this initially appeared promising, the unusually high validation score raised concerns regarding potential overfitting to the validation distribution or sensitivity to augmentation and data splits.
+
+<p align="center"> <img src="https://github.com/user-attachments/assets/703986a9-36c8-44db-921f-cdac3dfcd8ad" width="900"> </p>
+Test Performance and Generalization Gap
+
+Despite the strong validation results, the test accuracy reached only 88.4%. Although this represents an improvement of approximately 1% over the ResNet baseline, the large gap between validation and test performance contrasts with earlier ResNet experiments, where validation and test accuracies were closely aligned.
+
+This discrepancy suggests that EfficientNet-B0, due to its higher parameter efficiency and representational capacity, may be:
+
+- overfitting to validation-specific patterns,
+- exploiting augmentation-induced artifacts,
+- or benefiting from an optimistic validation split that does not fully reflect the test distribution.
+
+### Augmentation Sensitivity Analysis
+
+To further investigate the generalization issue, misclassified test samples were analyzed, and additional data augmentation strategies were explored. In particular, random rotation was introduced to increase invariance.
+
+However, this modification led to a reduction in validation accuracy to approximately 93–94%, accompanied by a ~1% decrease in test accuracy.
+
+<p align="center"> <img src="https://github.com/user-attachments/assets/3d8a5f7a-0292-4741-b098-c4f64086daf6" width="900"> </p>
+
+This result indicates that random rotation may be detrimental for CIFAR-10, where object orientation often carries semantic meaning (e.g., vehicles and animals). Given the low resolution (32×32) of the dataset, aggressive geometric transformations can distort class-discriminative features rather than improve robustness.
