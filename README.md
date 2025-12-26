@@ -125,7 +125,7 @@ For CIFAR-10, **mild or no ColorJitter** performed better than aggressive color 
 This further emphasizes the need to **match augmentation strategies to dataset characteristics**, rather than applying them blindly.
 
 
-### EfficientNet-B0 vs ResNet: Validation–Test Discrepancy Analysis
+## EfficientNet-B0 vs ResNet: Validation–Test Discrepancy Analysis
 
 After establishing a baseline using a ResNet architecture, the model backbone was replaced with EfficientNet-B0 to evaluate its impact on classification performance on CIFAR-10.
 
@@ -144,7 +144,7 @@ This discrepancy suggests that EfficientNet-B0, due to its higher parameter effi
 - exploiting augmentation-induced artifacts,
 - or benefiting from an optimistic validation split that does not fully reflect the test distribution.
 
-### Augmentation Sensitivity Analysis
+## Augmentation Sensitivity Analysis
 
 To further investigate the generalization issue, misclassified test samples were analyzed, and additional data augmentation strategies were explored. In particular, random rotation was introduced to increase invariance.
 
