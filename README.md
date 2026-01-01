@@ -13,39 +13,14 @@ Every technique used here was **tested, questioned, and validated experimentally
 
 ---
 
-## What I Learned Through This Project
-
-- How regularization techniques (Dropout, Weight Decay) affect generalization
-- Why some popular augmentations **hurt performance on small images**
-- How learning rate schedulers influence convergence
-- How normalization actually works (not just how to apply it)
-- How architectural changes affect model saving/loading
-- Why validation accuracy can increase while loss behaves differently
-
----
-
 ## Model Architecture
 
-- Backbone: **ResNet-18**
+- Backbone: **ResNet-18** , **EfficientNetB0**
 - Modifications:
   - Final classification layer adapted for CIFAR-10 (10 classes)
   - **Dropout layer added before the classifier** to improve generalization and enable ensemble-style inference
 
-## Data Augmentations Used
-
-- Dropout during training -> Probability = 0.2
-- RandomCrop(size=32,padding=4)
-- RandomHorizontalFlip(p=0.5)
-- Normalization
-
-```text
-ResNet-18
- └── Feature extractor (unchanged)
- └── Dropout(p)
- └── Linear(512 → 10)
-```
-
-## Observations on Data Augmentation
+# Observations
 
 During experimentation, **RandomCrop with padding consistently outperformed RandomResizedCrop** on the CIFAR-10 dataset. In addition to achieving better validation accuracy, RandomResizedCrop also **significantly slowed down training iterations**.
 
@@ -69,14 +44,6 @@ Below is a visualization and performance trend when using **RandomCrop(32, paddi
 Below is a visualization and performance trend when using **RandomResizedCrop**:
 
 <img width="1500" height="500" alt="RandomResizedCrop Augmentation Results" src="https://github.com/user-attachments/assets/7f554532-067d-4eef-b66f-d0c6136d1e53" />
-
----
-
-### Key Takeaway
-For **small-resolution datasets like CIFAR-10**, augmentations that involve **resizing** can be destructive.  
-Simple spatial augmentations such as **RandomCrop with padding** provide effective regularization without sacrificing image fidelity.
-
-These results highlight the importance of **choosing augmentations based on dataset characteristics rather than default best practices**.
 
 ## Dropout Ensemble Experiment (Negative Result)
 
@@ -118,23 +85,18 @@ CIFAR-10 images are:
 
 As a result, introducing heavy color perturbations did **not add meaningful invariance** and sometimes introduced unnecessary noise.
 
-### Takeaway
-Color-based augmentations are **not universally beneficial**.  
-For CIFAR-10, **mild or no ColorJitter** performed better than aggressive color transformations.
-
-This further emphasizes the need to **match augmentation strategies to dataset characteristics**, rather than applying them blindly.
-
 
 ## EfficientNet-B0 vs ResNet: Validation–Test Discrepancy Analysis
 
 After establishing a baseline using a ResNet architecture, the model backbone was replaced with EfficientNet-B0 to evaluate its impact on classification performance on CIFAR-10.
 
-Validation Performance
+## Validation Performance
 
 The EfficientNet-B0 model achieved a validation accuracy of approximately 96%, which was significantly higher than the training accuracy. While this initially appeared promising, the unusually high validation score raised concerns regarding potential overfitting to the validation distribution or sensitivity to augmentation and data splits.
 
 <p align="center"> <img src="https://github.com/user-attachments/assets/703986a9-36c8-44db-921f-cdac3dfcd8ad" width="900"> </p>
-Test Performance and Generalization Gap
+
+## Test Performance and Generalization Gap
 
 Despite the strong validation results, the test accuracy reached only 88.4%. Although this represents an improvement of approximately 1% over the ResNet baseline, the large gap between validation and test performance contrasts with earlier ResNet experiments, where validation and test accuracies were closely aligned.
 
@@ -144,7 +106,7 @@ This discrepancy suggests that EfficientNet-B0, due to its higher parameter effi
 - exploiting augmentation-induced artifacts,
 - or benefiting from an optimistic validation split that does not fully reflect the test distribution.
 
-## Augmentation Sensitivity Analysis
+## Random Rotation
 
 To further investigate the generalization issue, misclassified test samples were analyzed, and additional data augmentation strategies were explored. In particular, random rotation was introduced to increase invariance.
 
@@ -153,3 +115,34 @@ However, this modification led to a reduction in validation accuracy to approxim
 <p align="center"> <img src="https://github.com/user-attachments/assets/3d8a5f7a-0292-4741-b098-c4f64086daf6" width="900"> </p>
 
 This result indicates that random rotation may be detrimental for CIFAR-10, where object orientation often carries semantic meaning (e.g., vehicles and animals). Given the low resolution (32×32) of the dataset, aggressive geometric transformations can distort class-discriminative features rather than improve robustness.
+
+
+Maybe we should focus on the model rather than tweaking augmentation. So I looked into EfficientNetb0 model and did some tweaking.
+
+## Stride Adjustment in the First Layer
+
+EfficientNet-B0 uses a stride of (2,2) in the first convolution, which is aggressive for 32×32 CIFAR-10 images. This downsamples spatial information too early.
+
+The stride was changed to (1,1) to preserve low-level details.
+
+Result:
+
+Validation accuracy: ~98%
+
+Training accuracy: 88% -> 91.82% ( Huge improvement!!!)
+
+<p align="center"> <img src="https://github.com/user-attachments/assets/b04d96cc-9bfc-4de4-ac7b-bea35d15d6c8" width="900"> </p>
+
+
+## Edge-Focused Augmentation (Random Grayscale)
+
+After analysing the dataset more closely, I realized that model may be emphasizing the color too much which may hamper accuracy. So to reduce reliance on color and emphasize structural features, RandomGrayscale (p = 0.1) was applied.
+
+Result:
+
+Validation accuracy: unchanged
+
+Test accuracy: 91.82% → 92.33%
+
+<p align="center"> <img src="https://github.com/user-attachments/assets/5d0355a7-374e-4b53-9c92-4ad2ccc02ec4" width="900"> </p>
+
