@@ -129,7 +129,7 @@ Result:
 
 Validation accuracy: ~98%
 
-Training accuracy: 88% -> 91.82% ( Huge improvement!!!)
+Test accuracy: 88% -> 91.82% ( Huge improvement!!!)
 
 <p align="center"> <img src="https://github.com/user-attachments/assets/b04d96cc-9bfc-4de4-ac7b-bea35d15d6c8" width="900"> </p>
 
