@@ -2,6 +2,7 @@ from pyexpat import model
 import torch
 import matplotlib.pyplot as plt
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class ModelTrainer:
     def __init__(self, model, train_data, val_data, loss_function, optimizer,scheduler=None):
@@ -29,6 +30,8 @@ class ModelTrainer:
             total_loss_val = 0
             self.model.train()
             for img, label in self.train_data:
+                img = img.to(device)
+                label = label.to(device)
                 self.optimizer.zero_grad()
                 results = self.model(img)
                 khoti = self.loss_function(results, label)
@@ -43,6 +46,8 @@ class ModelTrainer:
             if n_models > 1:
                 self.enable_dropout()
             for val_img, val_labels in self.val_data:
+                val_img = val_img.to(device)
+                val_labels = val_labels.to(device)
                 with torch.no_grad():
                     ensemble_outputs = torch.zeros((val_img.size(0), n_models, 10))
                     for i in range(n_models):
@@ -65,7 +70,8 @@ class ModelTrainer:
                 if save:
                     with open(save, 'a') as file:
                         file.write(s+"\n\n")
-                        print(f"Successfully saved the string to {save}")
+                        if epoch%(epochs/20)==0:
+                            print('|',end='')
                 else:
                     print(s)
             except IOError as e:
@@ -96,15 +102,15 @@ class ModelTrainer:
         else:
             plt.show()
 
-
-
-def show_missclassification (model,val_data,le):
+def give_predictions(model,val_data):
     model.eval()
-    misclassified_images = []
-    misclassified_labels = []
-    true_labels = []
+    images = []
+    labels = []
+    preds = []
 
     for img, label in val_data:
+        img = img.to(device)
+        label = label.to(device)
         with torch.no_grad():
             ensemble_outputs = torch.zeros((img.size(0), 1, 10))
             for i in range(1):
@@ -112,23 +118,40 @@ def show_missclassification (model,val_data,le):
                 ensemble_outputs[:, i, :] = outputs
             avg_outputs = ensemble_outputs.mean(dim=1).to(label.device)
             predictions = torch.argmax(avg_outputs, axis=1)
+            preds.append(predictions.cpu())
+            labels.append(label.cpu())
+            images.append(img)
 
-            for i in range(len(label)):
-                if predictions[i] != label[i]:
-                    misclassified_images.append(img[i])
-                    misclassified_labels.append(predictions[i].item())
-                    true_labels.append(label[i].item())
+    return torch.cat(preds).numpy(), torch.cat(labels).numpy(), torch.cat(images)
 
-    num_images = len(misclassified_images)
-    if num_images == 0:
-        print("No misclassifications found.")
-        return
-
+def show_missclassification (preds,labels,images,classes=range(10),le=None):
+    j=0
     plt.figure(figsize=(12, 12))
-    for i in range(min(num_images, 25)):
-        plt.subplot(5, 5, i + 1)
-        plt.imshow(misclassified_images[i].permute(1, 2, 0).cpu())
-        plt.title(f'True: {le.inverse_transform([true_labels[i]])[0]}, Pred: {le.inverse_transform([misclassified_labels[i]])[0]}')
+    for i in range(49):
+        if j>= len(preds):
+            break
+        plt.subplot(7, 7, i + 1)
+        while (preds[j] == labels[j] or labels[j] not in classes):
+            j+=1
+            if j>= len(preds):
+                break
+        plt.imshow(images[j].permute(1, 2, 0).cpu())
+        plt.title(f'True: {le.inverse_transform([labels[j]])[0]},\n Pred: {le.inverse_transform([preds[j]])[0]}')
         plt.axis('off')
+        j+=1
+    plt.tight_layout()
+    plt.show()
+
+def show_classes(preds,labels, images, classes,le):
+    j=0
+    plt.figure(figsize=(12, 12))
+    for i in range(100):
+        plt.subplot(10, 10, i + 1)
+        while labels[j] not in classes:
+            j+=1
+        plt.imshow(images[j].permute(1, 2, 0).cpu())
+        plt.title(f'True: {le.inverse_transform([labels[j]])[0]},\n Pred: {le.inverse_transform([preds[j]])[0]}')
+        plt.axis('off')
+        j+=1
     plt.tight_layout()
     plt.show()
